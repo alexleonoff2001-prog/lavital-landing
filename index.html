@@ -981,13 +981,14 @@
 
 <script>
 (function(){
-  var CONTACT_EMAIL = "ukrainiancosmetics@gmail.com";
+  var LEAD_ENDPOINT = "https://lavital-lead-relay.alexleonoff2001.workers.dev/";
   var form = document.getElementById('leadForm');
   var nameInput = document.getElementById('fullName');
   var phoneInput = document.getElementById('phone');
   var nameError = document.getElementById('nameError');
   var phoneError = document.getElementById('phoneError');
   var success = document.getElementById('formSuccess');
+  var submitBtn = form.querySelector('.submit-btn');
 
   function validPhone(v){
     var digits = v.replace(/\D/g,'');
@@ -1016,13 +1017,25 @@
 
     var name = nameInput.value.trim();
     var phone = phoneInput.value.replace(/\D/g,'');
-    var subject = "Nueva solicitud de llamada - Lavital";
-    var body = "Nombre: " + name + "\nTeléfono: " + phone + "\n\nSolicita que un asesor de Lavital lo(a) llame para coordinar su pedido.";
-    var mailtoUrl = "mailto:" + CONTACT_EMAIL + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
 
-    success.classList.add('show');
-    form.classList.add('is-sent');
-    window.location.href = mailtoUrl;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando...';
+
+    fetch(LEAD_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, phone: phone })
+    })
+      .then(function(res){ return res.ok ? res.json() : Promise.reject(res); })
+      .then(function(){
+        success.classList.add('show');
+        form.classList.add('is-sent');
+      })
+      .catch(function(){
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Quiero que me llamen';
+        phoneError.textContent = 'No pudimos enviar tu solicitud. Intenta de nuevo en unos segundos.';
+      });
   });
 })();
 </script>
